@@ -6,7 +6,7 @@ var host = 'google.com';
 /**********/
 function ping(host, callback){
 	if(net.isIPv4(host)){
-		echo(host);
+		echo(host, callback);
 	} else {
 		//Resolve DNS
 		console.log('Performing DNS lookup for ' + host);
@@ -14,7 +14,7 @@ function ping(host, callback){
 			if(!err){
 				console.log(host + ' resolved to ' + addr);
 				host = addr;
-				echo(host);
+				echo(host, callback);
 			} else {
 				var result = {
 					success: false,
