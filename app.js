@@ -57,6 +57,25 @@ function echo(host, callback){
 		}
 	});
 }
-ping(host, function(result){
-	console.dir(result);
+function parseHistory(){
+	var countTotal = 0;
+	var countSuccess = 0;
+	var timeTotal = 0;
+	for(i = 0; i < history.length; i++){
+		if(history[i].success){
+			countTotal++;
+			countSuccess++;
+			timeTotal += history[i].time;
+		} else {
+			countTotal++;
+		}
+	}
+	var percentUptime = Math.round(countSuccess / countTotal * 10000) / 100 + '%';
+	var averageTime = Math.round(timeTotal / countSuccess * 100) / 100;
+	console.log(percentUptime + ' uptime with an average round-trip time of ' + averageTime + 'ms');
+}
+var history = [];
+setInterval(ping, 10000, host, function(result){
+	history.push(result);
+	parseHistory();
 });
