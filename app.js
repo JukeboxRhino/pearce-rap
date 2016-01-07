@@ -1,10 +1,10 @@
-var ping = require('net-ping');
+var net_ping = require('net-ping');
 var net = require('net');
 var dns = require('dns');
 /**Config**/
 var host = 'google.com';
 /**********/
-function echo(host, callback){
+function ping(host, callback){
 	if(net.isIPv4(host)){
 		echo(host);
 	} else {
@@ -26,7 +26,9 @@ function echo(host, callback){
 			}
 		});
 	}
-	var session = ping.createSession();
+}
+function echo(host, callback){
+	var session = net_ping.createSession();
 	session.on('close', function(){
 		console.log('Socket closed');
 	});
@@ -55,6 +57,6 @@ function echo(host, callback){
 		}
 	});
 }
-echo(host, function(result){
+ping(host, function(result){
 	console.dir(result);
 });
