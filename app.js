@@ -102,7 +102,7 @@ function parseHistory(){
 			}
 		}
 		var uptimePercent = Math.round(countSuccessful / countTotal * 10000) / 100 + '%';
-		var averageTime = Math.round(timeTotal / countTotal * 100) / 100;
+		var averageTime = Math.round(timeTotal / countSuccessful * 100) / 100;
 		console.log('--- ' + hosts[i] + ' has ' + uptimePercent + ' uptime with an average round-trip time of ' + averageTime + 'ms');
 	}
 	console.log('---');
