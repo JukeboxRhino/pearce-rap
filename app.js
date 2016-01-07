@@ -7,32 +7,29 @@ var historyChanged = false;
 /**Config**/
 var host = 'google.com';
 var historyFile = 'history.json';
-var pingIntervalMs = 5000;
-var historySaveIntervalMs = 10000;
+var pingIntervalMs = 15000;
+var historySaveIntervalMs = 60000;
 /**********/
 function writeHistory(history){
-	console.log('writeHistory: ' + history);
 	fs.writeFile(historyFile, history, function(err){
 		if(!err){
-			console.log('Successfully wrote history file');
+			
 		} else {
 			console.log('Error writing history file');
 		}
 	});
 }
-function readHistory(){
+function readHistory(callback){
 	fs.readFile(historyFile, function(err, data){
-		if(!err){
-			return JSON.parse(data);
-			console.dir(data);
+		if(!err && data){
+			callback(JSON.parse(data));
 		} else {
-			return false;
-			console.log('Error reading history file');
+			callback(false);
+			console.dir(err);
 		}
 	});
 }
 function saveHistory(){
-	console.log('saveHistory: ' + history);
 	if(historyChanged){
 		writeHistory(JSON.stringify(history));
 		historyChanged = false;
@@ -107,14 +104,14 @@ function parseHistory(){
 	console.log('--- ' + percentUptime + ' uptime with an average round-trip time of ' + averageTime + 'ms');
 }
 //On startup, try to load history
-var loadedHistory = readHistory();
-if(loadedHistory){
-	history = loadedHistory;
-	console.log('Loaded history from file');
-	console.log('History is ' + history);
-} else {
-	console.log('Error reading history file');
-}
+readHistory(function(loadedHistory){
+	if(loadedHistory){
+		history = loadedHistory;
+		console.log('Successfully loaded history');
+	} else {
+		console.log('Could not load history file');
+	}
+});
 setInterval(ping, pingIntervalMs, host, function(result){
 	history.push(result);
 	historyChanged = true;
