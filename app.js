@@ -2,13 +2,14 @@ var net_ping = require('net-ping');
 var net = require('net');
 var dns = require('dns');
 var fs = require('fs');
-var history = [];
+var history = {};
 var historyChanged = false;
 /**Config**/
-var host = 'google.com';
+var hosts = ['google.com', 'yahoo.com', 'mvctc.com'];
 var historyFile = 'history.json';
-var pingIntervalMs = 15000;
+var pingIntervalMs = 5000;
 var historySaveIntervalMs = 60000;
+var historyDisplayMs = 10000;
 /**********/
 function writeHistory(history){
 	fs.writeFile(historyFile, history, function(err){
@@ -87,21 +88,24 @@ function echo(host, callback){
 	});
 }
 function parseHistory(){
-	var countTotal = 0;
-	var countSuccess = 0;
-	var timeTotal = 0;
-	for(i = 0; i < history.length; i++){
-		if(history[i].success){
-			countTotal++;
-			countSuccess++;
-			timeTotal += history[i].time;
-		} else {
-			countTotal++;
+	for(i = 0; i < hosts.length; i++){
+		var countTotal = 0;
+		var countSuccessful = 0;
+		var timeTotal = 0;
+		for(j = 0; j < history[hosts[i]].length; j++){
+			if(history[hosts[i]][j].success){
+				countTotal++;
+				countSuccessful++;
+				timeTotal += history[hosts[i]][j].time;
+			} else {
+				countTotal++;
+			}
 		}
+		var uptimePercent = Math.round(countSuccessful / countTotal * 10000) / 100 + '%';
+		var averageTime = Math.round(timeTotal / countTotal * 100) / 100;
+		console.log('--- ' + hosts[i] + ' has ' + uptimePercent + ' uptime with an average round-trip time of ' + averageTime + 'ms');
 	}
-	var percentUptime = Math.round(countSuccess / countTotal * 10000) / 100 + '%';
-	var averageTime = Math.round(timeTotal / countSuccess * 100) / 100;
-	console.log('--- ' + percentUptime + ' uptime with an average round-trip time of ' + averageTime + 'ms');
+	console.log('---');
 }
 //On startup, try to load history
 readHistory(function(loadedHistory){
@@ -112,9 +116,18 @@ readHistory(function(loadedHistory){
 		console.log('Could not load history file');
 	}
 });
-setInterval(ping, pingIntervalMs, host, function(result){
-	history.push(result);
-	historyChanged = true;
-	parseHistory();
-});
+function startMonitoring(host){
+	if(!history[host]){
+		history[host] = [];
+	}
+	setInterval(ping, pingIntervalMs, host, function(result){
+		history[host].push(result);
+		historyChanged = true;
+	});
+}
 setInterval(saveHistory, historySaveIntervalMs);
+setInterval(parseHistory, historyDisplayMs);
+for(i = 0; i < hosts.length; i++){
+	console.log('Started monitoring ' + hosts[i]);
+	startMonitoring(hosts[i]);
+}
