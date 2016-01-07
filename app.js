@@ -47,7 +47,7 @@ function echo(host, callback){
 			callback(result);
 		} else {
 			var result = {
-				success: false;
+				success: false,
 				error: err,
 				type: 'Unsuccessful ping'
 			}
