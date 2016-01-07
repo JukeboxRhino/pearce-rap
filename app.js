@@ -5,7 +5,7 @@ var fs = require('fs');
 var history = {};
 var historyChanged = false;
 /**Config**/
-var hosts = ['google.com', 'yahoo.com', 'mvctc.com'];
+var hosts = ['google.com', 'yahoo.com', 'mvctc.com', '127.0.0.1'];
 var historyFile = 'history.json';
 var pingIntervalMs = 5000;
 var historySaveIntervalMs = 60000;
