@@ -5,11 +5,12 @@ var fs = require('fs');
 var history = {};
 var historyChanged = false;
 /**Config**/
+var showTime = false;
 var hosts = ['google.com', 'yahoo.com', 'mvctc.com', '127.0.0.1'];
 var historyFile = 'history.json';
 var pingIntervalMs = 5000;
-var historySaveIntervalMs = 60000;
-var historyDisplayMs = 10000;
+var historySaveIntervalMs = 30000;
+var historyDisplayMs = 5000;
 /**********/
 function writeHistory(history){
 	fs.writeFile(historyFile, history, function(err){
@@ -106,9 +107,15 @@ function parseHistory(){
 		}
 		var uptimePercent = Math.round(countSuccessful / countTotal * 10000) / 100 + '%';
 		var averageTime = Math.round(timeTotal / countSuccessful * 100) / 100;
-		console.log('--- ' + hosts[i] + ' has ' + uptimePercent + ' uptime with an average round-trip time of ' + averageTime + 'ms');
+		if(showTime){
+			console.log(hosts[i] + ' has ' + uptimePercent + ' uptime with an average round-trip time of ' + averageTime + 'ms');
+		} else {
+			console.log(hosts[i] + ' has ' + uptimePercent + ' uptime');
+		}
 	}
-	console.log('---');
+	for(i = 0; i < process.stdout.rows - hosts.length - 1; i++){
+		console.log('');
+	}
 }
 //On startup, try to load history
 readHistory(function(loadedHistory){
