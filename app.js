@@ -70,8 +70,11 @@ function echo(host, callback){
 		};
 		callback(result);
 	});
-	session.pingHost(host, function(err, target, sent, rcvd){
+	var sent = new Date();
+	var rcvd;
+	session.pingHost(host, function(err, target){
 		if(!err){
+			rcvd = new Date();
 			var result = {
 				success: true,
 				time: rcvd.getTime() - sent.getTime()
