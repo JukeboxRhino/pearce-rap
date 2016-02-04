@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/JukeboxRhino/pearce-rap/issues"
   },
-  "homepage": "https://github.com/JukeboxRhino/pearce-rap#readme"
+  "homepage": "https://github.com/JukeboxRhino/pearce-rap#readme",
+  "dependencies": {
+    "colors": "^1.1.2"
+  }
 }
