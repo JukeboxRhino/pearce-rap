@@ -86,7 +86,7 @@ function parseHistory(){
 				GHistory[host][j].timeout ? timeout++ : unknown++;
 			}
 		}
-		out(host+' has '+Math.round(success/total*10000)/100+'% uptime ('+success+'/'+total+') ('+timeout+' request(s) timed out, '+unknown+' unknown error(s))');
+		out(host+' has '+Math.round(success/total*10000)/100+'% uptime ('+success+'/'+total+') ('+timeout+' timeouts, '+unknown+' unknown error(s))');
 	}
 }
 
