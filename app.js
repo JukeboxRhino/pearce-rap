@@ -71,6 +71,7 @@ function startMonitoring(host){
 
 function parseHistory(){
 	var hosts = Object.keys(GHistory);
+	out('[STATUS]'.cyan)
 	for(i = 0; i < hosts.length; i++){
 		var host = hosts[i];
 		var total = GHistory[host].length;
@@ -81,12 +82,12 @@ function parseHistory(){
 		for(j = 0; j < total; j++){
 			if(GHistory[host][j].success){
 				success++;
-				totalms += GHistory[host][j].ms;
+				totalms += parseInt(GHistory[host][j].ms);
 			} else {
 				GHistory[host][j].timeout ? timeout++ : unknown++;
 			}
 		}
-		out(host+' has '+Math.round(success/total*10000)/100+'% uptime ('+success+'/'+total+') ('+timeout+' timeouts, '+unknown+' unknown error(s))');
+		out(host.gray+' has '+Math.round(success/total*10000)/100+'% uptime ('+success+'/'+total+') Avg. time: ' + Math.round(totalms/success*100)/100 + 'ms');
 	}
 }
 
@@ -94,7 +95,7 @@ function saveHistory(history, callback){
 	var data = JSON.stringify(history);
 	fs.writeFile(__dirname + '/' + historyFile, data, function(err){
 		if(!err){
-			out('Saved history');
+			out('Saved history'.green);
 			if(callback){
 				callback(null);
 			}
@@ -111,7 +112,7 @@ function readHistory(callback){
 	fs.readFile(__dirname + '/' + historyFile, function(err, data){
 		if(!err){
 			callback(JSON.parse(data));
-			out('Successfully read history file');
+			out('Successfully read history file'.green);
 		} else {
 			error('Error reading history file, writing new history file');
 			saveHistory({});//Save empty object
