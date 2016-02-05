@@ -6,8 +6,8 @@ var historyFile = 'history.json';
 var msregex = new RegExp(/time[=<](\d+)ms/);
 //NOTE: This only works on Windows!
 var pingInterval = 5000;//In milliseconds
-var historyInterval = 7000;//In milliseconds
-var printInterval = 24 * 60 * 60 * 1000;//In milliseconds
+var historyInterval = 60000;//In milliseconds
+var printInterval = 12 * 60 * 60 * 1000;//In milliseconds (Set to false if undesired)
 var printer = '192.5.5.5';
 var GHistory;
 /*History Structure
@@ -186,5 +186,5 @@ readHistory(function(history){
 		}
 	}
 	setInterval(parseHistory, historyInterval);
-	setInterval(printToFTP, printInterval);
+	if(printInterval) setInterval(printToFTP, printInterval);
 });
