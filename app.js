@@ -1,4 +1,5 @@
 var colors = require('colors');
+var jsftp = require('jsftp');
 var exec = require('child_process').exec;
 var fs = require('fs');
 var historyFile = 'history.json';
@@ -6,6 +7,8 @@ var msregex = new RegExp(/time[=<](\d+)ms/);
 //NOTE: This only works on Windows!
 var pingInterval = 5000;//In milliseconds
 var historyInterval = 7000;//In milliseconds
+var printInterval = 24 * 60 * 60 * 1000;//In milliseconds
+var printer = '192.5.5.5';
 var GHistory;
 /*History Structure
 {GHistory}----
@@ -25,6 +28,50 @@ function out(text){
 
 function error(text){
 	out(text.red.underline);
+}
+
+function printToFTP(){
+	out('Printing results...');
+	var string = '';
+	var hosts = Object.keys(GHistory);
+	for(i = 0; i < hosts.length; i++){
+		var host = hosts[i];
+		var total = GHistory[host].length;
+		var success = 0;
+		var totalms = 0;
+		var timeout = 0;
+		var unknown = 0;
+		for(j = 0; j < total; j++){
+			if(GHistory[host][j].success){
+				success++;
+				totalms += parseInt(GHistory[host][j].ms);
+			} else {
+				GHistory[host][j].timeout ? timeout++ : unknown++;
+			}
+		}
+		var uptime = Math.round(success/total*10000)/100+'%';
+		var average = Math.round(totalms/success*100)/100+'ms';
+		var timestamp = new Date().toLocaleString();
+		string += '['+host+'] (' + timestamp + ')\r\n\
+		\tUptime:\t\t\t\t' + uptime + '\r\n\
+		\tAverage response time:\t\t' + average + '\r\n\
+		\tTotal echo-requests sent:\t' + total + '\r\n\
+		\tTotal successful echo-replies:\t' + success + '\r\n\
+		\tTotal echo-requests timed out:\t' + timeout + '\r\n\
+		\tTotal unknown errors:\t\t' + unknown + '\r\n';
+	}
+	var buffer = new Buffer(string);
+	var ftp = new jsftp({
+		host: printer
+	});
+	ftp.put(buffer, '/prt0/ftpresults.txt', function(err) {
+		if(!err){
+			out('FTP PUT successful'.green);
+		}
+		ftp.raw.quit(function(err, data) {
+			out('FTP QUIT');
+		});
+	});
 }
 
 function ping(host, callback){
@@ -139,4 +186,5 @@ readHistory(function(history){
 		}
 	}
 	setInterval(parseHistory, historyInterval);
+	setInterval(printToFTP, printInterval);
 });

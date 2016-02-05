@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/JukeboxRhino/pearce-rap#readme",
   "dependencies": {
-    "colors": "^1.1.2"
+    "colors": "^1.1.2",
+    "jsftp": "^1.5.3"
   }
 }
