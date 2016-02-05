@@ -20,7 +20,6 @@ ts(number) - success(Boolean) - ms(number/null) - timeOut(Boolean)
 function out(text){
 	var d = new Date();
 	var tag = '['+d.toLocaleTimeString()+'] ';
-	tag = tag.green
 	console.log(tag + text);
 }
 
@@ -29,7 +28,7 @@ function error(text){
 }
 
 function ping(host, callback){
-	var ts = Date.now();//Timestamp
+	var ts = new Date();//Timestamp
 	exec('ping ' + host + ' -n 1', function(err, stdout, stderr){
 		stdout = stdout.toString().split('\r\n');
 		if(stdout[2] == 'Request timed out.'){
@@ -72,15 +71,9 @@ function startMonitoring(host){
 
 function parseHistory(){
 	var hosts = Object.keys(GHistory);
-	var linecount = hosts.length;
-	out('[STATUS]'.cyan);
-	process.stdout.write('╔════════════════╦════════╦═════════╦══════════════╦═════════════╦═════════════╗');
-	process.stdout.write('║    Hostname    ║ Uptime ║Avg. Time║Req. Timed Out║Unknown Error║Tracking Time║');
 	for(i = 0; i < hosts.length; i++){
 		var host = hosts[i];
 		var total = GHistory[host].length;
-		var since = new Date(GHistory[host][0].ts);
-		var diff = Date.now() - since.getTime();
 		var success = 0;
 		var totalms = 0;
 		var timeout = 0;
@@ -88,12 +81,12 @@ function parseHistory(){
 		for(j = 0; j < total; j++){
 			if(GHistory[host][j].success){
 				success++;
-				totalms += parseInt(GHistory[host][j].ms);
+				totalms += GHistory[host][j].ms;
 			} else {
 				GHistory[host][j].timeout ? timeout++ : unknown++;
 			}
 		}
-		
+		out(host+' has '+Math.round(success/total*10000)/100+'% uptime ('+success+'/'+total+') ('+timeout+' timeouts, '+unknown+' unknown error(s))');
 	}
 }
 
