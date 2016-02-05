@@ -93,33 +93,7 @@ function parseHistory(){
 				GHistory[host][j].timeout ? timeout++ : unknown++;
 			}
 		}
-		diff = diff / 1000;
-		if(diff < 60){
-			diff = Math.round(diff*10)/10 + 's';
-		} else if(diff/60 < 60){
-			diff = Math.round(diff/60*10)/10 + 'm';
-		} else if(diff/360 < 24){
-			diff = Math.round(diff/360*10)/10 + 'h';
-		} else {
-			diff = Math.round(diff/(360*24)*10)/10 + 'd';
-		}
-		var hpad = 16 - host.length;
-		for(i = 0; i < hpad; i++){host += ' '}
-		var uptime = (Math.round(success/total*10000)/100).toString() + '%';
-		var upad = 8 - uptime.length;
-		for(i = 0; i < upad; i++){uptime += ' '}
-		var average = Math.round(totalms/success*100)/100 + 'ms';
-		var apad = 9 - average.length;
-		for(i = 0; i < apad; i++){average += ' '}
-		timeout = timeout.toString();
-		var rpad = 14 - timeout.length;
-		for(i = 0; i < rpad; i++){timeout += ' '}
-		unknown = unknown.toString();
-		var ukpad = 13 - unknown.length;
-		for(i = 0; i < ukpad; i++){unknown += ' '}
-		var tpad = 13 - diff.length;
-		for(i = 0; i < tpad; i++){diff += ' '}
-		process.stdout.write('║'+host+'║'+uptime+'║'+average+'║'+timeout+'║'+unknown+'║'+diff+'║');
+		
 	}
 }
 
