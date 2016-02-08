@@ -5,9 +5,9 @@ var fs = require('fs');
 var historyFile = 'history.json';
 var msregex = new RegExp(/time[=<](\d+)ms/);
 //NOTE: This only works on Windows!
-var pingInterval = 5000;//In milliseconds
-var historyInterval = 60000;//In milliseconds
-var printInterval = 12 * 60 * 60 * 1000;//In milliseconds (Set to false if undesired)
+var pingInterval = 15 * 1000;
+var historyInterval = 15 * 1000;
+var printInterval = 12 * 60 * 60 * 1000;//(Set to false if undesired)
 var printer = '192.5.5.5';
 var GHistory;
 /*History Structure
@@ -32,33 +32,54 @@ function error(text){
 
 function printToFTP(){
 	out('Printing results...');
-	var string = '';
+	var timestamp = new Date().toLocaleString();
+	var string = timestamp + '\r\n';
 	var hosts = Object.keys(GHistory);
 	for(i = 0; i < hosts.length; i++){
 		var host = hosts[i];
+		var d = new Date();
+		var tag = '['+d.toLocaleTimeString()+'] ';
+		process.stdout.write(tag+'Parsing data for ' + host+'...');
 		var total = GHistory[host].length;
 		var success = 0;
 		var totalms = 0;
 		var timeout = 0;
 		var unknown = 0;
+		var total24 = 0;
+		var success24 = 0;
+		var totalms24 = 0;
+		var timeout24 = 0;
+		var unknown24 = 0;
 		for(j = 0; j < total; j++){
+			if(GHistory[host][j].ts >= d.getTime() - (24 * 60 * 60 * 1000)){
+					total24++;
+				}
 			if(GHistory[host][j].success){
 				success++;
 				totalms += parseInt(GHistory[host][j].ms);
+				if(GHistory[host][j].ts >= d.getTime() - (24 * 60 * 60 * 1000)){
+					success24++;
+					totalms24 += parseInt(GHistory[host][j].ms);
+				}
 			} else {
 				GHistory[host][j].timeout ? timeout++ : unknown++;
+				if(GHistory[host][j].ts >= d.getTime() - (24 * 60 * 60 * 1000)){
+					GHistory[host][j].timeout ? timeout24++ : unknown24++;
+				}
 			}
 		}
 		var uptime = Math.round(success/total*10000)/100+'%';
+		var uptime24 = Math.round(success24/total24*10000)/100+'%';
 		var average = Math.round(totalms/success*100)/100+'ms';
-		var timestamp = new Date().toLocaleString();
-		string += '['+host+'] (' + timestamp + ')\r\n\
-		\tUptime:\t\t\t\t' + uptime + '\r\n\
-		\tAverage response time:\t\t' + average + '\r\n\
-		\tTotal echo-requests sent:\t' + total + '\r\n\
-		\tTotal successful echo-replies:\t' + success + '\r\n\
-		\tTotal echo-requests timed out:\t' + timeout + '\r\n\
-		\tTotal unknown errors:\t\t' + unknown + '\r\n';
+		var average24 = Math.round(totalms24/success24*100)/100+'ms';
+		string += '['+host+']\r\n\
+		Uptime:\t\t\t\t' + uptime + '\t(24h):' + uptime24 + '\r\n\
+		Average response time:\t\t' + average + '\t(24h):' + average24 + '\r\n\
+		Total echo-requests sent:\t' + total + '\t(24h):' + total24 + '\r\n\
+		Total successful echo-replies:\t' + success + '\t(24h):' + success24 + '\r\n\
+		Total echo-requests timed out:\t' + timeout + '\t(24h):' + timeout24 + '\r\n\
+		Total unknown errors:\t\t' + unknown + '\t(24h):' + unknown24 + '\r\n';
+		process.stdout.write('Done\r\n');
 	}
 	var buffer = new Buffer(string);
 	var ftp = new jsftp({
@@ -75,7 +96,7 @@ function printToFTP(){
 }
 
 function ping(host, callback){
-	var ts = new Date();//Timestamp
+	var ts = new Date().getTime();//Timestamp
 	exec('ping ' + host + ' -n 1', function(err, stdout, stderr){
 		stdout = stdout.toString().split('\r\n');
 		if(stdout[2] == 'Request timed out.'){
@@ -168,6 +189,15 @@ function readHistory(callback){
 	});
 }
 
+function deleteRecords(host, callback){
+	if(GHistory[host]){
+		delete GHistory[host];
+		callback(true);
+	} else {
+		callback(false);
+	}
+}
+
 process.on('SIGINT', function(){
 	out('Gracefully exiting...');
 	saveHistory(GHistory, function(err){
@@ -181,8 +211,21 @@ readHistory(function(history){
 		error('Please enter one or more hosts as arguments');
 		process.exit();
 	} else {
-		for(i = 2; i < process.argv.length; i++){
-			startMonitoring(process.argv[i]);
+		if(process.argv[2] == '-d'){
+			var deleted = 0;
+			for(i = 3; i < process.argv.length; i++){
+				deleteRecords(process.argv[i], function(success){
+					if(success) deleted++;
+				});
+			}
+			saveHistory(GHistory, function(err){
+				out(('Deleted ' + deleted + ' records, exiting...').green);
+				process.exit();
+			});
+		} else {
+			for(i = 2; i < process.argv.length; i++){
+				startMonitoring(process.argv[i]);
+			}
 		}
 	}
 	setInterval(parseHistory, historyInterval);
