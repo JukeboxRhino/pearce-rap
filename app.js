@@ -50,6 +50,8 @@ function printToFTP(){
 		var totalms24 = 0;
 		var timeout24 = 0;
 		var unknown24 = 0;
+		var lastunknown;
+		var lastunknownts;
 		for(j = 0; j < total; j++){
 			if(GHistory[host][j].ts >= d.getTime() - (24 * 60 * 60 * 1000)){
 					total24++;
@@ -62,7 +64,13 @@ function printToFTP(){
 					totalms24 += parseInt(GHistory[host][j].ms);
 				}
 			} else {
-				GHistory[host][j].timeout ? timeout++ : unknown++;
+				if(GHistory[host][j].timeout){
+					timeout++;
+				} else {
+					unknown++;
+					lastunknown = GHistory[host][j].error;
+					lastunknownts = GHistory[host][j].ts;
+				}
 				if(GHistory[host][j].ts >= d.getTime() - (24 * 60 * 60 * 1000)){
 					GHistory[host][j].timeout ? timeout24++ : unknown24++;
 				}
@@ -79,6 +87,10 @@ function printToFTP(){
 		Total successful echo-replies:\t' + success + '\t(24h):' + success24 + '\r\n\
 		Total echo-requests timed out:\t' + timeout + '\t(24h):' + timeout24 + '\r\n\
 		Total unknown errors:\t\t' + unknown + '\t(24h):' + unknown24 + '\r\n';
+		if(lastunknown){
+			var ts = new Date(lastunknownts).toLocaleString();
+			string += '(Last unknown error was "' + lastunknown + '" at ' + ts + ')\r\n';
+		}
 		process.stdout.write('Done\r\n');
 	}
 	var buffer = new Buffer(string);
@@ -100,13 +112,13 @@ function ping(host, callback){
 	exec('ping ' + host + ' -n 1', function(err, stdout, stderr){
 		stdout = stdout.toString().split('\r\n');
 		if(stdout[2] == 'Request timed out.'){
-			callback(1, null, host, ts);
+			callback(1, null, null, host, ts);
 		} else if(msregex.exec(stdout[2])){
 			var ms = msregex.exec(stdout[2])[1];
-			callback(null, ms, host, ts);
+			callback(null, null, ms, host, ts);
 		} else {
 			//Unknown ping response
-			callback(2, null, host, ts);
+			callback(2, stdout[2], null, host, ts);
 		}
 	});
 }
@@ -115,7 +127,7 @@ function startMonitoring(host){
 	if(!GHistory[host]){
 		GHistory[host] = [];
 	}
-	function resultHandler(err, result, host, ts){
+	function resultHandler(err, error, result, host, ts){
 		var obj = {};
 		if(!err){
 			obj.ts = ts;
@@ -129,6 +141,7 @@ function startMonitoring(host){
 				obj.timeout = true;
 			} else {
 				obj.timeout = false;
+				obj.error = error;
 			}
 		}
 		GHistory[host].push(obj);
