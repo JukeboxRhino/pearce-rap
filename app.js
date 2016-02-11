@@ -4,10 +4,11 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var historyFile = 'history.json';
 var msregex = new RegExp(/time[=<](\d+)ms/);
+var dnsregex = new RegExp(/Ping request could not find host (.*)\. Please check the name and try ag
+ain\./);
 //NOTE: This only works on Windows!
 var pingInterval = 15 * 1000;
 var historyInterval = 15 * 1000;
-var printInterval = 12 * 60 * 60 * 1000;//(Set to false if undesired)
 var printer = '192.5.5.5';
 var GHistory;
 /*History Structure
@@ -89,13 +90,16 @@ function printToFTP(){
 		Total unknown errors:\t\t' + unknown + '\t(24h):' + unknown24 + '\r\n';
 		if(lastunknown){
 			var ts = new Date(lastunknownts).toLocaleString();
-			string += '(Last unknown error was "' + lastunknown + '" at ' + ts + ')\r\n';
+			string += 'Last unknown error: ' + lastunknown + 'at ' + ts + '\r\n';
 		}
 		process.stdout.write('Done\r\n');
 	}
 	var buffer = new Buffer(string);
 	var ftp = new jsftp({
 		host: printer
+	});
+	ftp.on('error', function(err){
+		error('FTP Error')
 	});
 	ftp.put(buffer, '/prt0/ftpresults.txt', function(err) {
 		if(!err){
@@ -110,15 +114,16 @@ function printToFTP(){
 function ping(host, callback){
 	var ts = new Date().getTime();//Timestamp
 	exec('ping ' + host + ' -n 1', function(err, stdout, stderr){
-		stdout = stdout.toString().split('\r\n');
-		if(stdout[2] == 'Request timed out.'){
+		line3 = stdout.toString().split('\r\n')[2];
+		stdout = stdout.toString();
+		if(line3 == 'Request timed out.'){
 			callback(1, null, null, host, ts);
-		} else if(msregex.exec(stdout[2])){
-			var ms = msregex.exec(stdout[2])[1];
+		} else if(msregex.exec(line3)){
+			var ms = msregex.exec(line3)[1];
 			callback(null, null, ms, host, ts);
 		} else {
 			//Unknown ping response
-			callback(2, stdout[2], null, host, ts);
+			callback(2, stdout, null, host, ts);
 		}
 	});
 }
@@ -237,7 +242,7 @@ readHistory(function(history){
 			});
 		} else if(process.argv[2] == '-p'){
 			printToFTP();
-			process.exit();
+			setTimeout(process.exit, 5000);
 		} else {
 			for(i = 2; i < process.argv.length; i++){
 				startMonitoring(process.argv[i]);
@@ -245,5 +250,4 @@ readHistory(function(history){
 		}
 	}
 	setInterval(parseHistory, historyInterval);
-	if(printInterval) setInterval(printToFTP, printInterval);
 });
