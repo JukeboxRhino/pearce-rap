@@ -146,7 +146,11 @@ function startMonitoring(host){
 				obj.timeout = true;
 			} else {
 				obj.timeout = false;
-				obj.error = error;
+				if(dnsregex.exec(error)){
+					obj.error = '(DNS Error)';
+				} else {
+					obj.error = error;
+				}
 			}
 		}
 		GHistory[host].push(obj);
