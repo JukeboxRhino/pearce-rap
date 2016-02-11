@@ -4,8 +4,7 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var historyFile = 'history.json';
 var msregex = new RegExp(/time[=<](\d+)ms/);
-var dnsregex = new RegExp(/Ping request could not find host (.*)\. Please check the name and try ag
-ain\./);
+var dnsregex = new RegExp(/Ping request could not find host (.*)\. Please check the name and try again\./);
 //NOTE: This only works on Windows!
 var pingInterval = 15 * 1000;
 var historyInterval = 15 * 1000;
