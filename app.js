@@ -50,8 +50,8 @@ function printToFTP(){
 		var totalms24 = 0;
 		var timeout24 = 0;
 		var unknown24 = 0;
-		var lastunknown;
-		var lastunknownts;
+		var lastunknown = '';
+		var lastunknownts = '';
 		for(j = 0; j < total; j++){
 			if(GHistory[host][j].ts >= d.getTime() - (24 * 60 * 60 * 1000)){
 					total24++;
@@ -235,6 +235,9 @@ readHistory(function(history){
 				out(('Deleted ' + deleted + ' records, exiting...').green);
 				process.exit();
 			});
+		} else if(process.argv[2] == '-p'){
+			printToFTP();
+			process.exit();
 		} else {
 			for(i = 2; i < process.argv.length; i++){
 				startMonitoring(process.argv[i]);
